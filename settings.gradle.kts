@@ -26,3 +26,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "HapticFeedBack"
 include(":app")
+include(":UniversalLoader:XposedLoader")
+include(":UniversalLoader:XposedApi:modern:api")
+include(":UniversalLoader:XposedApi:modern:service")
+include(":UniversalLoader:XposedCompat")
+include(":UniversalLoader:hiddenapi-stub")

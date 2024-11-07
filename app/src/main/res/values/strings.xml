@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HapticFeedBack</string>
+    <string name="xposed_description">Added haptic feedback for HapticV2 devices when releasing the back gesture.</string>
+</resources>

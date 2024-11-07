@@ -1,13 +1,16 @@
 [versions]
-agp = "8.6.1"
+compileSdk = "35"
+
+agp = "8.7.2"
 ezXHelper = "2.2.0"
-kotlin = "2.0.20"
-xposed = "82"
+kotlin = "2.0.21"
 
 [libraries]
+androidx-annotation = { module = "androidx.annotation:annotation", version = "1.9.1" }
 ezXHelper = { module = "com.github.kyuubiran:EzXHelper", version.ref = "ezXHelper" }
-xposed = { module = "de.robv.android.xposed:api", version.ref = "xposed" }
+classical-xposed-api = { module = "de.robv.android.xposed:api", version = "82" }
 
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
-kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }

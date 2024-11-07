@@ -4,8 +4,8 @@ import com.android.build.gradle.internal.api.BaseVariantOutputImpl
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
@@ -57,6 +57,7 @@ android {
     }
     kotlin.jvmToolchain(21)
     packaging {
+        resources.merges += "META-INF/xposed/**"
         resources.excludes += "**"
         applicationVariants.all {
             outputs.all {
@@ -67,6 +68,6 @@ android {
 }
 
 dependencies {
-    compileOnly(libs.xposed)
-    implementation(libs.ezXHelper)
+    runtimeOnly(project(":UniversalLoader:XposedLoader"))
+    implementation(project(":UniversalLoader:XposedCompat"))
 }

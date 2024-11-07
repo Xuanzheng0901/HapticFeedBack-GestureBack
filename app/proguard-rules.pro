@@ -1,3 +1,1 @@
--keep class top.yukonga.hapticFeedBack.MainHook {
-    <init>();
-}
+-keep class art.qqlittleice.xposedloader.UniversalLoader { **; }
