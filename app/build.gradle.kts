@@ -13,7 +13,7 @@ android {
     compileSdk = 35
     defaultConfig {
         applicationId = namespace
-        minSdk = 34
+        minSdk = 35
         targetSdk = 35
         versionCode = 110
         versionName = "1.1.0"
@@ -43,6 +43,7 @@ android {
             }
         }
     }
+    buildFeatures.buildConfig = true
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -68,6 +69,5 @@ android {
 }
 
 dependencies {
-    runtimeOnly(project(":UniversalLoader:XposedLoader"))
-    implementation(project(":UniversalLoader:XposedCompat"))
+    compileOnly(project(":libxposed"))
 }
