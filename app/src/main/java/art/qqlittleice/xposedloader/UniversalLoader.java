@@ -20,7 +20,6 @@ public abstract class UniversalLoader {
 
     private static final HashMap<Class<? extends UniversalLoader>, Object> entryInstance = new HashMap<>();
 
-
     private static final String TAG = "UniversalLoader";
     public UniversalBridge bridge = UniversalBridge.get();
 

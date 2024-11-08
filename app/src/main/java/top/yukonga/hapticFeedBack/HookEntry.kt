@@ -14,7 +14,6 @@ class HookEntry(bridge: UniversalBridge) : UniversalLoader(bridge) {
         modulePackageParam: ModulePackageParam,
         loadedPackageParam: LoadedPackageParam
     ) {
-
         if (loadedPackageParam.packageName == "com.miui.home") {
             bridge.log("hooking com.miui.home")
             val hapticFeedbackCompatV2 = "com.miui.home.launcher.common.HapticFeedbackCompatV2"
@@ -38,13 +37,11 @@ class HookEntry(bridge: UniversalBridge) : UniversalLoader(bridge) {
 
             hapticFeedbackCompatV2.replaceMethod(loadedPackageParam.classLoader, "lambda\$performGestureReadyBack\$11") {
                 bridge.log("hooking lambda\$performGestureReadyBack\$11")
-                val hapticFeedbackCompatV2Class = loadedPackageParam.classLoader.loadClass(hapticFeedbackCompatV2)
-                val hapticFeedbackCompatV2Instance = hapticFeedbackCompatV2Class.getDeclaredConstructor().newInstance()
-                val mHapticHelperField = loadedPackageParam.classLoader.loadClass(hapticFeedbackCompatV2).getDeclaredField("mHapticHelper")
-                mHapticHelperField.isAccessible = true
-                val mHapticHelper = mHapticHelperField.get(hapticFeedbackCompatV2Instance)
-                val performExtHapticFeedback = mHapticHelper.javaClass.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
-                performExtHapticFeedback.invoke(mHapticHelper, 0)
+                val mHapticHelperField = it.getThisObject()?.javaClass?.getDeclaredField("mHapticHelper")
+                mHapticHelperField?.isAccessible = true
+                val mHapticHelper = mHapticHelperField?.get(it.getThisObject())
+                val performExtHapticFeedback = mHapticHelper?.javaClass?.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
+                performExtHapticFeedback?.invoke(mHapticHelper, 0)
             }
 
             hapticFeedbackCompatV2.hookBeforeMethod(loadedPackageParam.classLoader, "performGestureBackHandUp") {
@@ -56,13 +53,11 @@ class HookEntry(bridge: UniversalBridge) : UniversalLoader(bridge) {
 
             hapticFeedbackCompatV2.replaceMethod(loadedPackageParam.classLoader, "lambda\$performGestureBackHandUp\$12") {
                 bridge.log("hooking lambda\$performGestureBackHandUp\$12")
-                val hapticFeedbackCompatV2Class = loadedPackageParam.classLoader.loadClass(hapticFeedbackCompatV2)
-                val hapticFeedbackCompatV2Instance = hapticFeedbackCompatV2Class.getDeclaredConstructor().newInstance()
-                val mHapticHelperField = loadedPackageParam.classLoader.loadClass(hapticFeedbackCompatV2).getDeclaredField("mHapticHelper")
-                mHapticHelperField.isAccessible = true
-                val mHapticHelper = mHapticHelperField.get(hapticFeedbackCompatV2Instance)
-                val performExtHapticFeedback = mHapticHelper.javaClass.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
-                performExtHapticFeedback.invoke(mHapticHelper, 1)
+                val mHapticHelperField = it.getThisObject()?.javaClass?.getDeclaredField("mHapticHelper")
+                mHapticHelperField?.isAccessible = true
+                val mHapticHelper = mHapticHelperField?.get(it.getThisObject())
+                val performExtHapticFeedback = mHapticHelper?.javaClass?.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
+                performExtHapticFeedback?.invoke(mHapticHelper, 1)
             }
         }
     }
