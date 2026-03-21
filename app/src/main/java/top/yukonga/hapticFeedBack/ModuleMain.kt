@@ -20,15 +20,20 @@ class ModuleMain(base: XposedInterface, param: XposedModuleInterface.ModuleLoade
         super.onPackageLoaded(param)
         loadedPackageParam = param
         if (param.packageName == "com.miui.home") {
-            val hapticFeedbackCompatV2 = "com.miui.home.launcher.common.HapticFeedbackCompatV2"
-            val gestureStubView = "com.miui.home.recents.GestureStubView"
-            val gestureStubViewClass = param.classLoader.loadClass(gestureStubView)
-            val hapticFeedbackCompatV2Class = param.classLoader.loadClass(hapticFeedbackCompatV2)
-            hookMethods(hapticFeedbackCompatV2Class, PerformGestureReadyBackHook::class.java, "performGestureReadyBack")
-            hookMethods(hapticFeedbackCompatV2Class, PerformGestureReadyBackLambdaHook::class.java, "lambda\$performGestureReadyBack\$11")
-            hookMethods(hapticFeedbackCompatV2Class, PerformGestureBackHandUpHook::class.java, "performGestureBackHandUp")
-            hookMethods(hapticFeedbackCompatV2Class, PerformGestureBackHandUpLambdaHook::class.java, "lambda\$performGestureBackHandUp\$12")
-            hookMethods(gestureStubViewClass, InjectKeyEventHook::class.java, "injectKeyEvent")
+            //Hook HapticFeedbackCompat.doesSupportHapticV2 to always return false
+
+            val hapticFeedbackCompat = "com.miui.home.common.hapticfeedback.HapticFeedbackCompat"
+            val hapticFeedbackCompatClass = param.classLoader.loadClass(hapticFeedbackCompat)
+
+                try {
+                    val field = hapticFeedbackCompatClass.getDeclaredField("sIsSupportHapticV2")
+                    field.isAccessible = true
+                    field.setBoolean(null, false)
+                    if (BuildConfig.DEBUG) module.log("set sIsSupportHapticV2 = false via reflection")
+                } catch (e: Throwable) {
+                    if (BuildConfig.DEBUG) module.log("failed to set sIsSupportHapticV2: ${e.message}")
+                }
+            hookMethods(hapticFeedbackCompatClass, DoesSupportHapticV2Hook::class.java, "doesSupportHapticV2")
         }
     }
 
@@ -38,75 +43,15 @@ class ModuleMain(base: XposedInterface, param: XposedModuleInterface.ModuleLoade
             .filter { method: Method -> list.contains(method.name) }
             .forEach { method: Method? -> hook(method!!, hooker) }
     }
-
 }
 
-class PerformGestureReadyBackHook : XposedInterface.Hooker {
-    companion object {
-        @JvmStatic
-        fun before() {
-            if (BuildConfig.DEBUG) module.log("hooking performGestureReadyBack")
-            val timeOutBlocker = "com.miui.home.recents.util.TimeOutBlocker"
-            val backgroundThread = "com.miui.home.launcher.common.BackgroundThread"
-            val getHandlerMethod = loadedPackageParam.classLoader.loadClass(backgroundThread).getDeclaredMethod("getHandler")
-            val getHandler = getHandlerMethod.invoke(null)  // getHandler is a static method
-            val startCountDownMethod = loadedPackageParam.classLoader.loadClass(timeOutBlocker)
-                .getDeclaredMethod("startCountDown", Handler::class.java, Long::class.java, String::class.java)
-            startCountDownMethod.invoke(null, getHandler, 140L, "BLOCKER_ID_FOR_HAPTIC_GESTURE_BACK")  // startCountDown is a static method
-        }
-    }
-}
-
-class PerformGestureReadyBackLambdaHook : XposedInterface.Hooker {
+class DoesSupportHapticV2Hook : XposedInterface.Hooker {
     companion object {
         @JvmStatic
         fun before(callback: XposedInterface.BeforeHookCallback) {
-            if (BuildConfig.DEBUG) module.log("hooking lambda\$performGestureReadyBack\$11")
-            val mHapticHelperField = callback.getThisObject()?.javaClass?.getDeclaredField("mHapticHelper")
-            mHapticHelperField?.isAccessible = true
-            val mHapticHelper = mHapticHelperField?.get(callback.getThisObject())
-            val performExtHapticFeedback = mHapticHelper?.javaClass?.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
-            performExtHapticFeedback?.invoke(mHapticHelper, 0)
-            callback.returnAndSkip(null)
+            if (BuildConfig.DEBUG) module.log("hooking doesSupportHapticV2 -> true")
+            // Force the method to return false and skip original implementation
+            callback.returnAndSkip(true)
         }
     }
 }
-
-class PerformGestureBackHandUpHook : XposedInterface.Hooker {
-    companion object {
-        @JvmStatic
-        fun before(callback: XposedInterface.BeforeHookCallback) {
-            if (BuildConfig.DEBUG) module.log("hooking performGestureBackHandUp")
-            val timeOutBlocker = "com.miui.home.recents.util.TimeOutBlocker"
-            val isBlockedMethod = loadedPackageParam.classLoader.loadClass(timeOutBlocker).getDeclaredMethod("isBlocked", String::class.java)
-            val isBlocked = isBlockedMethod.invoke(null, "BLOCKER_ID_FOR_HAPTIC_GESTURE_BACK") as Boolean  // isBlocked is a static method
-            if (isBlocked) callback.returnAndSkip(null)
-        }
-    }
-}
-
-class PerformGestureBackHandUpLambdaHook : XposedInterface.Hooker {
-    companion object {
-        @JvmStatic
-        fun before(callback: XposedInterface.BeforeHookCallback) {
-            if (BuildConfig.DEBUG) module.log("hooking lambda\$performGestureBackHandUp\$12")
-            val mHapticHelperField = callback.getThisObject()?.javaClass?.getDeclaredField("mHapticHelper")
-            mHapticHelperField?.isAccessible = true
-            val mHapticHelper = mHapticHelperField?.get(callback.getThisObject())
-            val performExtHapticFeedback = mHapticHelper?.javaClass?.getDeclaredMethod("performExtHapticFeedback", Int::class.java)
-            performExtHapticFeedback?.invoke(mHapticHelper, 1)
-            callback.returnAndSkip(null)
-        }
-    }
-}
-
-class InjectKeyEventHook : XposedInterface.Hooker {
-    companion object {
-        @JvmStatic
-        fun before(callback: XposedInterface.BeforeHookCallback) {
-            if (BuildConfig.DEBUG) module.log("hooking injectKeyEvent")
-            callback.getArgs()[1] = true
-        }
-    }
-}
-
