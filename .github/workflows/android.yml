@@ -36,7 +36,6 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          # 检查 keystore 文件是否存在
           if [ -f "${{ github.workspace }}/keystore.jks" ]; then
             echo "Keystore found. Building Debug and Release..."
             ./gradlew assembleDebug assembleRelease
@@ -46,6 +45,7 @@ jobs:
           fi
         env:
           KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
+        # 以下变量已修改为与您在 GitHub Settings 中设置的名字完全一致
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
