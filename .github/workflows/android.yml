@@ -23,19 +23,31 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'gradle'
+          # 移除了 cache: 'gradle'，交由下方的 setup-gradle 专门负责
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Decrypt Keystore
+        # 仅在非 PR 环境，且存在 SIGNING_KEY 密钥时才生成 keystore
+        if: ${{ github.event_name != 'pull_request' && secrets.SIGNING_KEY != '' }}
+        run: |
+          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/keystore.jks
+
       - name: Build with Gradle
         run: |
-          echo ${{ secrets.SIGNING_KEY }} | base64 -d > keystore.jks
-          ./gradlew assembleDebug assembleRelease
+          # 检查 keystore 文件是否存在
+          if [ -f "${{ github.workspace }}/keystore.jks" ]; then
+            echo "Keystore found. Building Debug and Release..."
+            ./gradlew assembleDebug assembleRelease
+          else
+            echo "Keystore NOT found. Building Debug only..."
+            ./gradlew assembleDebug
+          fi
         env:
-          KEYSTORE_PATH: "../keystore.jks"
-          KEYSTORE_PASS: ${{ secrets.KEY_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ALIAS }}
+          KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload Release APK
@@ -44,6 +56,7 @@ jobs:
           name: HapticFeedBack-Release
           path: app/build/outputs/apk/release/*.apk
           compression-level: 9
+          if-no-files-found: ignore # 防止在 PR 阶段没有生成 Release 包时导致整个 Workflow 报错
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
