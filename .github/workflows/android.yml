@@ -23,16 +23,17 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          # 移除了 cache: 'gradle'，交由下方的 setup-gradle 专门负责
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       - name: Decrypt Keystore
-        # 仅在非 PR 环境，且存在 SIGNING_KEY 密钥时才生成 keystore
         if: ${{ github.event_name != 'pull_request' && secrets.SIGNING_KEY != '' }}
         run: |
-          echo "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/keystore.jks
+          echo -n "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/keystore.jks
 
       - name: Build with Gradle
         run: |
@@ -45,7 +46,6 @@ jobs:
           fi
         env:
           KEYSTORE_PATH: "${{ github.workspace }}/keystore.jks"
-        # 以下变量已修改为与您在 GitHub Settings 中设置的名字完全一致
           KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
@@ -56,7 +56,7 @@ jobs:
           name: HapticFeedBack-Release
           path: app/build/outputs/apk/release/*.apk
           compression-level: 9
-          if-no-files-found: ignore # 防止在 PR 阶段没有生成 Release 包时导致整个 Workflow 报错
+          if-no-files-found: ignore # 确保在 PR 阶段因无 Release 包而不会导致 Workflow 报错
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
