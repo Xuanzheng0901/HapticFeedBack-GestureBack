@@ -31,9 +31,16 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decrypt Keystore
-        if: ${{ github.event_name != 'pull_request' && secrets.SIGNING_KEY != '' }}
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          echo -n "${{ secrets.SIGNING_KEY }}" | base64 -d > ${{ github.workspace }}/keystore.jks
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "SIGNING_KEY is empty, skipping decryption."
+          else
+            echo "SIGNING_KEY found. Decrypting keystore..."
+            echo -n "$SIGNING_KEY" | base64 -d > ${{ github.workspace }}/keystore.jks
+          fi
 
       - name: Build with Gradle
         run: |
@@ -56,7 +63,7 @@ jobs:
           name: HapticFeedBack-Release
           path: app/build/outputs/apk/release/*.apk
           compression-level: 9
-          if-no-files-found: ignore # 确保在 PR 阶段因无 Release 包而不会导致 Workflow 报错
+          if-no-files-found: ignore
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
