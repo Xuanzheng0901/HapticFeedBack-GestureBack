@@ -69,5 +69,6 @@ android {
 }
 
 dependencies {
+    compileOnly("io.github.libxposed:api:101.0.1")
     compileOnly(project(":libxposed"))
 }
