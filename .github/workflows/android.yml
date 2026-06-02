@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # 1. 必须赋予写入权限，工作流才能创建 Release 并上传附件
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -57,17 +60,18 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: HapticFeedBack-Release
-          path: app/build/outputs/apk/release/*.apk
-          compression-level: 9
-          if-no-files-found: ignore
-
-      - name: Upload Debug APK
+      # 2. 依然保留：将 Debug APK 传到 Actions 产物中（方便平时开发测试直接下载）
+      - name: Upload Debug APK to Actions
         uses: actions/upload-artifact@v4
         with:
           name: HapticFeedBack-Debug
           path: app/build/outputs/apk/debug/*.apk
           compression-level: 9
+
+      # 3. 新增：仅在推送 Git 标签（Tag）时，自动创建 GitHub Release 并上传 Release APK
+      - name: Create GitHub Release and Upload Release APK
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true # 自动根据提交历史生成 Release 说明日志
