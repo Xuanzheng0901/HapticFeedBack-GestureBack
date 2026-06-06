@@ -4,9 +4,9 @@ on:
   push:
     tags:
       - '**'
-    branches: [ main ]
+    branches: [ ModernApi ]
   pull_request:
-    branches: [ main ]
+    branches: [ ModernApi ]
   workflow_dispatch:
 
 jobs:
